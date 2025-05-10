@@ -19,8 +19,13 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
         try {
-            userService.registerUser(user);
-            return ResponseEntity.ok("User registered successfully.");
+            System.out.println(userService.existsByUsername(user.getUsername()));
+            if (userService.existsByUsername(user.getUsername())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User has already registered!");
+            } else {
+                userService.registerUser(user);
+                return ResponseEntity.ok("User registered successfully.");
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed: " + e.getMessage());
         }
