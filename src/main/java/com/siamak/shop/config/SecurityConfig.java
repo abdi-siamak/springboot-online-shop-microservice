@@ -45,10 +45,11 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Allow access to static resources like HTML, CSS, JS
+                        .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/images/**").permitAll()
                         // Public endpoints
-                        .requestMatchers("/api/auth/login", "/api/users/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").authenticated()
-
+                        .requestMatchers("/api/auth/login", "/api/auth/logout","/api/users/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         // Protected endpoints
                         .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")

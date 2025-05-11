@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Products</title>
+    <style>
+        .product-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px;
+            width: 250px;
+            display: inline-block;
+            vertical-align: top;
+            text-align: center;
+        }
+
+        .product-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .product-card h3 {
+            margin: 10px 0 5px;
+        }
+
+        .product-card p {
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .product-card button {
+            margin: 5px;
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+<h2>Available Products</h2>
+<div id="products-container">
+
+    <!-- Example static product -->
+    <div class="product-card">
+        <img src="https://via.placeholder.com/200" alt="Product Image">
+        <h3>Sample Product</h3>
+        <p>Description of the product goes here.</p>
+        <p><strong>€19.99</strong></p>
+        <button onclick="addToCart(1)">Add to Cart</button>
+        <button onclick="removeFromCart(1)">Remove</button>
+    </div>
+    <div class="logout">
+        <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+
+    <!-- Add more static products if needed -->
+
+</div>
+
+<script>
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+        fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/index.html';
+                } else {
+                    return response.text().then(text => { throw new Error(text); });
+                }
+            })
+            .catch(error => {
+                alert("Logout failed: " + error.message);
+            });
+    });
+</script>
+
+</body>
+</html>
