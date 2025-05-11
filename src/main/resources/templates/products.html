@@ -40,18 +40,29 @@
 <body>
 <h2>Available Products</h2>
 <div id="products-container">
+    <tbody>
+    <tr th:each="item : ${productItems}">
+        <td>
+            <div class="product-card" data-id="${item.id}">
+                <img th:src="@{'https://via.placeholder.com/200'}" alt="${item.imageUrl}" />
+                <h3 th:text="${item.name}"></h3>
+                <p th:text="${item.description}"></p>
+                <p><strong th:text="${item.price}"></strong></p>
+                <input type="number" value="1" min="1" class="quantity" />
+                <button onclick="addToCart(${item.id})">Add to Cart</button>
+                <button onclick="removeFromCart(${item.id})">Remove</button>
+            </div>
+        </td>
+    </tr>
+    </tbody>
 
-    <!-- Example static product -->
-    <div class="product-card">
-        <img src="https://via.placeholder.com/200" alt="Product Image">
-        <h3>Sample Product</h3>
-        <p>Description of the product goes here.</p>
-        <p><strong>€19.99</strong></p>
-        <button onclick="addToCart(1)">Add to Cart</button>
-        <button onclick="removeFromCart(1)">Remove</button>
-    </div>
+
+
     <div class="logout">
         <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+    <div class="Go to Cart">
+        <button id="cartBtn" class="btn-cart">Cart</button>
     </div>
 
     <!-- Add more static products if needed -->
@@ -59,6 +70,28 @@
 </div>
 
 <script>
+
+    function addToCart(productId) {
+        const productElement = document.querySelector(`.product-card[data-id='${productId}']`);
+        const quantity = productElement.querySelector(".quantity").value;
+
+        fetch(`/api/cart/add?productId=${productId}&quantity=${quantity}`, {
+            method: "POST"
+        })
+            .then(res => res.text())
+            .then(msg => alert(msg))
+            .catch(err => alert("Error adding to cart: " + err.message));
+    }
+
+    function removeFromCart(productId) {
+        fetch(`/api/cart/remove?productId=${productId}`, {
+            method: "DELETE"
+        })
+            .then(res => res.text())
+            .then(msg => alert(msg))
+            .catch(err => alert("Error removing from cart: " + err.message));
+    }
+
     document.getElementById('logoutBtn').addEventListener('click', function () {
         fetch('/api/auth/logout', {
             method: 'POST',
@@ -74,6 +107,10 @@
             .catch(error => {
                 alert("Logout failed: " + error.message);
             });
+    });
+
+    document.getElementById('cartBtn').addEventListener('click', function () {
+        window.location.href = "/cart";
     });
 </script>
 

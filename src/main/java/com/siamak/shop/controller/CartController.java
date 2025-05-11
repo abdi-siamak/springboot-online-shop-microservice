@@ -1,0 +1,55 @@
+package com.siamak.shop.controller;
+
+import com.siamak.shop.model.CartItem;
+import com.siamak.shop.model.Product;
+import com.siamak.shop.repository.ProductRepository;
+import com.siamak.shop.service.CartService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/cart")
+@RequiredArgsConstructor
+public class CartController {
+
+    private final CartService cartService;
+    private final ProductRepository productRepository;
+
+    @PostMapping("/add")
+    public ResponseEntity<String> addToCart(@RequestParam Long productId, @RequestParam int quantity) {
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) {
+            return ResponseEntity.badRequest().body("Product not found");
+        }
+        cartService.addProduct(product, quantity);
+        return ResponseEntity.ok("Product added to cart");
+    }
+
+    @GetMapping
+    public List<CartItem> getCartItems() {
+        return cartService.getItems();
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<String> updateQuantity(@RequestParam Long productId, @RequestParam int quantity) {
+        cartService.updateQuantity(productId, quantity);
+        return ResponseEntity.ok("Cart updated");
+    }
+
+    @DeleteMapping("/remove")
+    public ResponseEntity<String> removeFromCart(@RequestBody Map<String, Long> body) {
+        long productId = body.get("productId");
+        cartService.removeProduct(productId);
+        return ResponseEntity.ok("Product removed from cart");
+    }
+
+    @DeleteMapping("/clear")
+    public ResponseEntity<String> clearCart() {
+        cartService.clearCart();
+        return ResponseEntity.ok("Cart cleared");
+    }
+}
