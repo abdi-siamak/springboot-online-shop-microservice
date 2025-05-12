@@ -3,7 +3,6 @@ package com.siamak.shop.security;
 import com.siamak.shop.model.User;
 import com.siamak.shop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 

@@ -2,11 +2,11 @@ package com.siamak.shop.service;
 
 import com.siamak.shop.model.User;
 import com.siamak.shop.repository.UserRepository;
-import com.siamak.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,6 +26,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    @Override
+    public List<User> findAll(){
+        return userRepository.findAll();
+    }
+
+    @Override
+    public void updateUser(User user) {
+        userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser(User user) {
+        userRepository.delete(user);
     }
 
     @Override

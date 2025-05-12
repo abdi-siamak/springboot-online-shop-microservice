@@ -6,6 +6,10 @@
 <body>
 <h1>Your Cart</h1>
 
+<div th:if="${userRole == T(com.siamak.shop.model.Role).ADMIN}">
+    <button id="adminBtn" class="admin-btn">Admin</button>
+</div>
+
 <table border="1">
     <thead>
     <tr>
@@ -26,13 +30,30 @@
         </td>
     </tr>
     </tbody>
-</table>
+</table><br>
+
+<div class="purchase">
+    <button id="purchaseBtn" class="btn-purchase">Purchase</button>
+    <button id="productsBtn" class="btn-products" style="margin-left: 10px;">Products</button>
+</div><br><br>
 
 <div class="logout">
     <button id="logoutBtn" class="btn-logout">Logout</button>
 </div>
 
+
 <script>
+    const adminBtn = document.getElementById('adminBtn');
+    if (adminBtn) {
+        adminBtn.addEventListener('click', function () {
+            window.location.href = "/admin";
+        });
+    }
+
+    document.getElementById('purchaseBtn').addEventListener('click', function () {
+        window.location.href = "/payment";
+    });
+
     document.getElementById('logoutBtn').addEventListener('click', function () {
         fetch('/api/auth/logout', {
             method: 'POST',
@@ -48,6 +69,10 @@
             .catch(error => {
                 alert("Logout failed: " + error.message);
             });
+    });
+
+    document.getElementById('productsBtn').addEventListener('click', function () {
+        window.location.href = "/products";
     });
 
     document.querySelectorAll('.remove-btn').forEach(button => {

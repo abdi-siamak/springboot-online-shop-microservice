@@ -1,11 +1,17 @@
 package com.siamak.shop.controller;
 
+import com.siamak.shop.model.User;
 import com.siamak.shop.service.CartService;
 import com.siamak.shop.service.ProductService;
+import com.siamak.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import java.security.Principal;
+import java.util.Optional;
 
 @Controller
 public class ViewController {
@@ -14,16 +20,33 @@ public class ViewController {
     private CartService cartService;
     @Autowired
     private ProductService productService;
+    @Autowired
+    private UserService userService;
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin")
+    public String admin(Model model) {
+        model.addAttribute("productItems", productService.getAllProducts());
+        model.addAttribute("users", userService.findAll());
+        return "admin";
+    }
 
     @GetMapping("/products")
-    public String products(Model model) {
+    public String products(Model model, Principal principal) {
         model.addAttribute("productItems", productService.getAllProducts());
+        Optional<User> user = userService.findByUsername(principal.getName());
+        User cartUser = user.orElseThrow(() -> new RuntimeException("User not found"));
+        model.addAttribute("userRole", cartUser.getRole());
         return "products";
     }
 
     @GetMapping("/cart")
-    public String cart(Model model) {
+    public String cart(Model model, Principal principal) {
         model.addAttribute("cartItems", cartService.getItems()); // Make cartItems available in the HTML template as a variable.
+        Optional<User> user = userService.findByUsername(principal.getName());
+        User cartUser = user.orElseThrow(() -> new RuntimeException("User not found"));
+        model.addAttribute("userRole", cartUser.getRole());
+
         return "cart";
     }
 }

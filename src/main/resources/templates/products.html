@@ -39,6 +39,11 @@
 </head>
 <body>
 <h2>Available Products</h2>
+
+<div th:if="${userRole == T(com.siamak.shop.model.Role).ADMIN}">
+    <button id="adminBtn" class="admin-btn">Admin</button>
+</div>
+
 <div id="products-container">
     <tbody>
     <tr th:each="item : ${productItems}">
@@ -56,20 +61,23 @@
     </tr>
     </tbody>
 
-
+    <div class="Go to Cart">
+        <button id="cartBtn" class="btn-cart">Cart</button>
+    </div><br><br>
 
     <div class="logout">
         <button id="logoutBtn" class="btn-logout">Logout</button>
     </div>
-    <div class="Go to Cart">
-        <button id="cartBtn" class="btn-cart">Cart</button>
-    </div>
-
-    <!-- Add more static products if needed -->
 
 </div>
 
 <script>
+    const adminBtn = document.getElementById('adminBtn');
+    if (adminBtn) {
+        adminBtn.addEventListener('click', function () {
+            window.location.href = "/admin";
+        });
+    }
 
     function addToCart(productId) {
         const productElement = document.querySelector(`.product-card[data-id='${productId}']`);

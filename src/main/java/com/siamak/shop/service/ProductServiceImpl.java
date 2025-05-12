@@ -2,7 +2,6 @@ package com.siamak.shop.service;
 
 import com.siamak.shop.model.Product;
 import com.siamak.shop.repository.ProductRepository;
-import com.siamak.shop.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
