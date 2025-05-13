@@ -147,6 +147,7 @@
                 if (response.ok) {
                     alert("New User registered successfully.");
                     window.location.reload();
+
                 } else {
                     return response.text().then(text => { throw new Error(text); });
                 }
@@ -177,6 +178,42 @@
 
     document.getElementById('productsBtn').addEventListener('click', function () {
         window.location.href = '/products';
+    });
+
+    document.querySelectorAll('.removeProduct-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.getAttribute('data-id');
+
+            fetch(`/api/products/${productId}`, {
+                method: "DELETE"
+            })
+                .then(res => {
+                    if (res.ok) {
+                        window.location.reload();
+                    } else {
+                        return res.text().then(msg => alert(msg));
+                    }
+                })
+                .catch(err => alert("Error removing product: " + err.message));
+        });
+    });
+
+    document.querySelectorAll('.removeUser-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const userId = this.getAttribute('data-id');
+
+            fetch(`/api/users/${userId}`, {
+                method: "DELETE"
+            })
+                .then(res => {
+                    if (res.ok) {
+                        window.location.reload();
+                    } else {
+                        return res.text().then(msg => alert(msg));
+                    }
+                })
+                .catch(err => alert("Error removing user: " + err.message));
+        });
     });
 
 </script>

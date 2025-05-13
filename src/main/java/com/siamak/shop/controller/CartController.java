@@ -41,8 +41,7 @@ public class CartController {
     }
 
     @DeleteMapping("/remove")
-    public ResponseEntity<String> removeFromCart(@RequestBody Map<String, Long> body) {
-        long productId = body.get("productId");
+    public ResponseEntity<String> removeFromCart(@RequestParam Long productId) {
         cartService.removeProduct(productId);
         return ResponseEntity.ok("Product removed from cart");
     }

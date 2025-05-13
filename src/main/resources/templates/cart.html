@@ -79,24 +79,17 @@
         button.addEventListener('click', function () {
             const productId = this.getAttribute('data-id');
 
-            fetch('/api/cart/remove', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ productId: productId }),
-                credentials: 'include'
+            fetch(`/api/cart/remove?productId=${productId}`, {
+                method: "DELETE"
             })
-                .then(response => {
-                    if (response.ok) {
+                .then(res => {
+                    if (res.ok) {
                         window.location.reload();
                     } else {
-                        alert('Failed to remove item');
+                        return res.text().then(msg => alert(msg));
                     }
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+                .catch(err => alert("Error removing from cart: " + err.message));
         });
     });
 
