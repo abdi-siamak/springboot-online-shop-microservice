@@ -26,6 +26,11 @@ public class ViewController {
     @Autowired
     private UserService userService;
 
+    @GetMapping("/")
+    public String index() {
+        return "index.html";
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin")
     public String admin(Model model, Authentication authentication) {
@@ -34,7 +39,8 @@ public class ViewController {
 
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
             Optional<User> currentUser = userService.findByEmail(userDetails.getUsername());
-            currentUser.ifPresent(user -> model.addAttribute("loggedInUserId", user.getId()));
+            currentUser.ifPresent(user -> { model.addAttribute("loggedInUserId", user.getId());
+            });
         }
 
         return "admin";

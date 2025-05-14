@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <title>Register</title>
 </head>
 <body>
 <h2>User Registration</h2>
 <form id="registerForm">
-    <label for="username">name:<span style="color:red">*</span></label><br>
-    <input type="text" id="username" name="username" required><br><br>
+    <label for="name">name:<span style="color:red">*</span></label><br>
+    <input type="text" id="name" name="name" required><br><br>
 
     <label for="email">Email (Username):<span style="color:red">*</span></label><br>
     <input type="email" id="email" name="email" required><br><br>
@@ -43,12 +45,15 @@
 </form>
 
 <script>
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     // Registration
     document.getElementById('registerForm').addEventListener('submit', function(event) {
         event.preventDefault();
 
         const formData = {
-            username: document.getElementById('username').value,
+            name: document.getElementById('name').value,
             email: document.getElementById('email').value,
             password: document.getElementById('password').value,
             role: document.getElementById('role').value,
@@ -58,6 +63,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
             },
             body: JSON.stringify(formData),
             credentials: 'include'
@@ -86,7 +92,10 @@
 
         fetch('/api/auth/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
             body: JSON.stringify(loginData),
             credentials: 'include'
         })

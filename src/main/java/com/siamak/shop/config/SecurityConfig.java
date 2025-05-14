@@ -1,12 +1,14 @@
 package com.siamak.shop.config;
 
+import com.siamak.shop.filter.CsrfTokenResponseHeaderBindingFilter;
 import com.siamak.shop.security.CustomUserDetailsService;
 import com.siamak.shop.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.*;
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.*;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.*;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,10 +47,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Allow access to static resources like HTML, CSS, JS
-                        .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/css/**", "/js/**", "/images/**").permitAll()
                         // Public endpoints
                         .requestMatchers("/api/auth/login", "/api/auth/logout","/api/users/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
@@ -68,6 +69,16 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+    @Bean
+    public FilterRegistrationBean<CsrfTokenResponseHeaderBindingFilter> csrfHeaderFilter() {
+        FilterRegistrationBean<CsrfTokenResponseHeaderBindingFilter> registrationBean =
+                new FilterRegistrationBean<>(new CsrfTokenResponseHeaderBindingFilter());
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE); // Make sure it runs early
+        return registrationBean;
+    }
+
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

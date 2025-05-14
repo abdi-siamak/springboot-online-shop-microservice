@@ -3,8 +3,10 @@
 <head>
     <title>Admin Dashboard</title>
     <meta charset="UTF-8" />
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
 </head>
-<body data-current-user-id="${loggedInUserId}">
+<body th:data-current-user-id="${loggedInUserId}">
 
 <h1>Admin Dashboard</h1>
 
@@ -89,6 +91,9 @@
 </div>
 
 <script>
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     document.getElementById('addProductBtn').addEventListener('click', function () {
         document.getElementById('productFormModal').style.display = 'block';
     });
@@ -112,6 +117,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
                 body: JSON.stringify(formData),
                 credentials: 'include'
@@ -148,6 +154,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
                 body: JSON.stringify(formData),
                 credentials: 'include'
@@ -174,11 +181,15 @@
     document.getElementById('logoutBtn').addEventListener('click', function () {
         fetch('/api/auth/logout', {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
             credentials: 'include'
         })
             .then(response => {
                 if (response.ok) {
-                    window.location.href = '/index.html';
+                    window.location.href = '/';
                 } else {
                     return response.text().then(text => { throw new Error(text); });
                 }
@@ -197,7 +208,11 @@
             const productId = this.getAttribute('data-id');
 
             fetch(`/api/products/${productId}`, {
-                method: "DELETE"
+                method: "DELETE",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
             })
                 .then(res => {
                     if (res.ok) {
@@ -214,14 +229,17 @@
     document.querySelectorAll('.removeUser-btn').forEach(button => {
         button.addEventListener('click', function () {
             const userId = this.getAttribute('data-id');
-
             if (userId === currentUserId) {
                 alert("You cannot remove yourself!");
                 return;
             }
 
             fetch(`/api/users/${userId}`, {
-                method: "DELETE"
+                method: "DELETE",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
             })
                 .then(res => {
                     if (res.ok) {

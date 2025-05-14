@@ -75,7 +75,6 @@ public class AuthController {
         cookie.setMaxAge(0); // expires immediately
         response.addCookie(cookie);
 
-        // Optionally, clear the Authorization header from the client side (this depends on how your client works)
         response.setHeader("Authorization", "");
 
         return ResponseEntity.ok("Logged out");
