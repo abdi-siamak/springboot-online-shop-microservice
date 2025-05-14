@@ -14,6 +14,7 @@ import com.siamak.shop.security.JwtUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -48,7 +49,7 @@ public class UserController {
     public ResponseEntity<Map<String, String>> register(@RequestBody User user, HttpServletRequest request, HttpServletResponse response) {
         Map<String, String> responseBody = new HashMap<>();
         try {
-            if (userService.existsByUsername(user.getUsername())) {
+            if (userService.existsByEmail(user.getEmail())) {
                 responseBody.put("message", "User has already registered!");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
             }
@@ -66,7 +67,7 @@ public class UserController {
             }
 
             if (existingToken == null || !jwtUtils.validateToken(existingToken)) {
-                String token = jwtUtils.generateToken(user.getUsername());
+                String token = jwtUtils.generateToken(user.getEmail());
                 response.setHeader("Authorization", "Bearer " + token);
                 Cookie cookie = new Cookie("jwt", token);
                 cookie.setHttpOnly(true);
@@ -85,8 +86,18 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<String> delete(@PathVariable Long id, Principal principal) {
+        Optional<User> currentUser = userService.findByEmail(principal.getName());
+
+        if (currentUser.isPresent() && currentUser.get().getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You cannot delete yourself.");
+        }
+
         Optional<User> user = userService.findById(id);
+
+        if (user.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
         userService.deleteUser(user.get());
         return ResponseEntity.noContent().build();
     }

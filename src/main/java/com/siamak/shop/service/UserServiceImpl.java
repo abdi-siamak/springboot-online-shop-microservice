@@ -18,14 +18,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerUser(User user) {
-        // TODO: Add password encoding and validation
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
     @Override
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public Optional<User> findByEmail(String username) {
+        return userRepository.findByEmail(username);
     }
 
     @Override
@@ -49,7 +48,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean existsByUsername(String email) {
-        return userRepository.existsByUsername(email);
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
+
+    @Override
+    public boolean existsById(Long id) {return userRepository.existsById(id);}
 }

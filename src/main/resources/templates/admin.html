@@ -4,7 +4,7 @@
     <title>Admin Dashboard</title>
     <meta charset="UTF-8" />
 </head>
-<body>
+<body data-current-user-id="${loggedInUserId}">
 
 <h1>Admin Dashboard</h1>
 
@@ -25,8 +25,8 @@
 <div id="userFormModal" style="display:none; position:fixed; top:20%; left:35%; background:#f0f0f0; padding:20px; border:1px solid #ccc; z-index:1000;">
     <h3>Add User</h3>
     <form id="userForm">
-        <label>username: <input type="text" id="username" required/><span style="color:red">*</span></label><br><br>
-        <label>email: <input type="text" id="email" required/><span style="color:red">*</span></label><br><br>
+        <label>name: <input type="text" id="name" required/><span style="color:red">*</span></label><br><br>
+        <label>email (Username): <input type="text" id="email" required/><span style="color:red">*</span></label><br><br>
         <label>password: <input type="password" id="password" required/><span style="color:red">*</span></label><br><br>
         <label>role:
             <select id="role">
@@ -34,15 +34,14 @@
                 <option value="USER">User</option>
             </select>
         </label><br><br>
-        <button id="submitUserBtn">Submit</button>
-        <button onclick="document.getElementById('userFormModal').style.display='none'">Cancel</button>
+        <button type="submit" id="submitUserBtn">Submit</button>
+        <button type="button" onclick="document.getElementById('userFormModal').style.display='none'">Cancel</button>
     </form>
 </div>
 
 <table border="1">
     <thead>
     <tr>
-        <th>ID</th>
         <th>Name</th>
         <th>Description</th>
         <th>Price</th>
@@ -50,7 +49,6 @@
     </thead>
     <tbody>
     <tr th:each="product : ${productItems}">
-        <td th:text="${product.id}"></td>
         <td th:text="${product.name}"></td>
         <td th:text="${product.description}"></td>
         <td th:text="${product.price}"></td>
@@ -66,15 +64,15 @@
 <table border="1">
     <thead>
     <tr>
-        <th>ID</th>
-        <th>Username</th>
+        <th>Name</th>
+        <th>Email</th>
         <th>Role</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="user : ${users}">
-        <td th:text="${user.id}"></td>
-        <td th:text="${user.username}"></td>
+        <td th:text="${user.name}"></td>
+        <td th:text="${user.email}"></td>
         <td th:text="${user.role}"></td>
         <td>
             <button type="button" id="removeUserBtn" class="removeUser-btn" th:data-id="${user.id}">Remove</button>
@@ -86,8 +84,8 @@
 
 
 <div class="logout">
-    <button id="logoutBtn" class="btn-logout">Logout</button>
-    <button id="productsBtn" class="btn-products" style="margin-left: 10px;">Products</button>
+    <button type="button" id="logoutBtn" class="btn-logout">Logout</button>
+    <button type="button" id="productsBtn" class="btn-products" style="margin-left: 10px;">Products</button>
 </div>
 
 <script>
@@ -99,7 +97,7 @@
         document.getElementById('userFormModal').style.display = 'block';
     });
 
-    document.getElementById('productForm').addEventListener('click', function (event) {
+    document.getElementById('productForm').addEventListener('submit', function (event) {
         event.preventDefault();
         if (this.checkValidity()) {
             const formData = {
@@ -136,11 +134,11 @@
         }
     });
 
-    document.getElementById('userForm').addEventListener('click', function (event) {
+    document.getElementById('userForm').addEventListener('submit', function (event) {
         event.preventDefault();
         if (this.checkValidity()) {
             const formData = {
-                username: document.getElementById('username').value,
+                name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value,
                 role: document.getElementById('role').value,
@@ -212,9 +210,15 @@
         });
     });
 
+    const currentUserId = document.body.dataset.currentUserId;
     document.querySelectorAll('.removeUser-btn').forEach(button => {
         button.addEventListener('click', function () {
             const userId = this.getAttribute('data-id');
+
+            if (userId === currentUserId) {
+                alert("You cannot remove yourself!");
+                return;
+            }
 
             fetch(`/api/users/${userId}`, {
                 method: "DELETE"

@@ -8,13 +8,13 @@
 <body>
 <h2>User Registration</h2>
 <form id="registerForm">
-    <label for="username">Username:</label><br>
+    <label for="username">name:<span style="color:red">*</span></label><br>
     <input type="text" id="username" name="username" required><br><br>
 
-    <label for="email">Email:</label><br>
+    <label for="email">Email (Username):<span style="color:red">*</span></label><br>
     <input type="email" id="email" name="email" required><br><br>
 
-    <label for="password">Password:</label><br>
+    <label for="password">Password:<span style="color:red">*</span></label><br>
     <input type="password" id="password" name="password" required><br><br>
 
     <label for="role">Role:</label><br>
@@ -30,13 +30,16 @@
 
 <h2>User Login</h2>
 <form id="loginForm">
-    <label for="loginUsername">Username:</label><br>
+    <label for="loginUsername">Email (Username):<span style="color:red">*</span></label><br>
     <input type="text" id="loginUsername" name="loginUsername" required><br><br>
 
-    <label for="loginPassword">Password:</label><br>
+    <label for="loginPassword">Password:<span style="color:red">*</span></label><br>
     <input type="password" id="loginPassword" name="loginPassword" required><br><br>
 
-    <button type="submit">Login</button>
+    <div style="display: flex; gap: 10px;">
+        <button id="loginBtn" class="btn-login" type="submit">Login</button>
+        <button type="button" id="googleLoginBtn" class="btn-googleLogin">Login with Google</button>
+    </div>
 </form>
 
 <script>
@@ -97,6 +100,11 @@
             .catch(error => {
                 alert("Login error: " + error.message);
             });
+    });
+
+    document.getElementById('googleLoginBtn').addEventListener('click', function(event) {
+        event.preventDefault();
+        window.location.href = "/oauth2/authorization/google";
     });
 </script>
 </body>
