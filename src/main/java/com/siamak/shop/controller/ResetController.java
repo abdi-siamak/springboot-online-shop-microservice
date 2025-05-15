@@ -14,7 +14,7 @@ public class ResetController {
         CsrfToken csrfToken = (CsrfToken) request.getAttribute("_csrf");
         model.addAttribute("_csrf", csrfToken);
         model.addAttribute("token", token);
-        System.out.println(csrfToken);
+
         return "reset-password";
     }
 }
