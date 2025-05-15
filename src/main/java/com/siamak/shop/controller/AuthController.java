@@ -1,7 +1,9 @@
 package com.siamak.shop.controller;
 
 import com.siamak.shop.dto.AuthRequest;
+import com.siamak.shop.dto.ResetPasswordRequest;
 import com.siamak.shop.security.JwtUtils;
+import com.siamak.shop.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.Cookie;
 
@@ -19,6 +23,7 @@ import jakarta.servlet.http.Cookie;
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+    private final AuthService authService;
 
     /*
     @PostMapping("/login")
@@ -78,5 +83,19 @@ public class AuthController {
         response.setHeader("Authorization", "");
 
         return ResponseEntity.ok("Logged out");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+        authService.initiatePasswordReset(email);
+        return ResponseEntity.ok("Password reset link sent");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request){
+        boolean result = authService.resetPassword(request.getToken(), request.getNewPassword());
+        return result
+                ? ResponseEntity.ok("Password reset successful")
+                : ResponseEntity.badRequest().body("Invalid or expired token");
     }
 }
