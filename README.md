@@ -8,9 +8,15 @@ This is a simple online shop project built using **Spring Boot** and **PostgreSQ
 ## Features
 
 - User registration and authentication (JWT-based)
+- User login/logout
+- Google sign-in with OAuth2
+- Forgot password mechanism
+- CSRF protection enabled
+- Cookie-based session management
 - Product browsing and details display
-- Shopping cart functionality
+- Shopping cart functionality with user cart page
 - Checkout system
+- Admin control page for product and user management
 - PostgreSQL database integration
 
 ## Technologies Used
@@ -18,8 +24,9 @@ This is a simple online shop project built using **Spring Boot** and **PostgreSQ
 - **Spring Boot**: Backend REST API framework
 - **PostgreSQL**: Database for storing user data, products, and orders
 - **JWT (JSON Web Tokens)**: Authentication and authorization
+- **OAuth2 (Google Sign-In)**: Social login integration
+- **Spring Security**: Security configuration including CSRF and cookie-based auth
 - **Spring Data JPA**: Database interaction
-- **Spring Security**: Security configuration
 
 ## Installation
 
