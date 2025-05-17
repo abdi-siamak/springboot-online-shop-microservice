@@ -1,11 +1,14 @@
 package com.siamak.shop.controller;
 
 import com.siamak.shop.dto.AuthRequest;
+import com.siamak.shop.dto.LoginRequest;
 import com.siamak.shop.dto.ResetPasswordRequest;
 import com.siamak.shop.security.JwtUtils;
 import com.siamak.shop.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,8 +17,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.ui.Model;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.Cookie;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -45,7 +54,15 @@ public class AuthController {
      */
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
+        Map<String, String> responseBody = new HashMap<>();
+
+        boolean captchaVerified = verifyCaptcha(request.getRecaptchaToken());
+        if (!captchaVerified) {
+            responseBody.put("message", "Captcha verification failed");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+        }
+
         // Authenticate the user
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
@@ -97,5 +114,28 @@ public class AuthController {
         return result
                 ? ResponseEntity.ok("Password reset successful")
                 : ResponseEntity.badRequest().body("Invalid or expired token");
+    }
+
+    public boolean verifyCaptcha(String token) {
+        //System.out.println("CAPTCHA received token: " + token);
+        /*
+        String secretKey = "6LfCVD0rAAAAACsoVJR4_ft-OI6r9tjVfUVPTCHo";
+        String url = "https://www.google.com/recaptcha/api/siteverify";
+
+        RestTemplate restTemplate = new RestTemplate();
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("secret", secretKey);
+        requestBody.add("response", token);
+
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+
+        Map<String, Object> body = response.getBody();
+        System.out.println("CAPTCHA verification response: " + body);
+
+        return body != null && Boolean.TRUE.equals(body.get("success"));
+        */
+
+        return !token.isEmpty();
     }
 }

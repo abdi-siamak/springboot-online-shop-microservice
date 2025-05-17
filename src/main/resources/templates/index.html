@@ -8,6 +8,8 @@
     <title>Register</title>
 </head>
 <body>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 <h2>User Registration</h2>
 <form id="registerForm">
     <label for="name">name:<span style="color:red">*</span></label><br>
@@ -25,6 +27,7 @@
         <option value="ADMIN">ADMIN</option>
     </select><br><br>
 
+    <div id="recaptcha-container-register"></div>
     <button type="submit">Register</button>
 </form>
 
@@ -38,6 +41,7 @@
     <label for="loginPassword">Password:<span style="color:red">*</span></label><br>
     <input type="password" id="loginPassword" name="loginPassword" required><br><br>
 
+    <div id="recaptcha-container-login"></div>
     <div style="display: flex; gap: 10px;">
         <button id="loginBtn" class="btn-login" type="submit">Login</button>
         <button type="button" id="googleLoginBtn" class="btn-googleLogin">Login with Google</button>
@@ -58,15 +62,43 @@
     const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
+    let registerRecaptchaWidgetId, loginRecaptchaWidgetId;
+
+    function onRecaptchaLoad() {
+        registerRecaptchaWidgetId = grecaptcha.render('recaptcha-container-register', {
+            'sitekey': '6LfCVD0rAAAAAEvHKKCcGdAL_jm9ojbQwItNcBFG',
+        });
+        loginRecaptchaWidgetId = grecaptcha.render('recaptcha-container-login', {
+            'sitekey': '6LfCVD0rAAAAAEvHKKCcGdAL_jm9ojbQwItNcBFG',
+        });
+    }
+
+    window.onload = function() {
+        if (typeof grecaptcha !== 'undefined') {
+            onRecaptchaLoad();
+        } else {
+            // wait or retry if grecaptcha not loaded yet
+        }
+    };
+
     // Registration
     document.getElementById('registerForm').addEventListener('submit', function(event) {
         event.preventDefault();
 
+        const recaptchaResponse = grecaptcha.getResponse(registerRecaptchaWidgetId);
+
+        if (!recaptchaResponse) {
+            alert("Please verify that you're not a robot.");
+            return;
+        }
         const formData = {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value,
-            role: document.getElementById('role').value,
+            user: {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value
+            },
+            recaptchaToken: recaptchaResponse
         };
 
         fetch('/api/users/register', {
@@ -79,6 +111,7 @@
             credentials: 'include'
         })
             .then(response => {
+                grecaptcha.reset(registerRecaptchaWidgetId);
                 if (response.ok) {
                     alert("User registered successfully.");
                     window.location.href = '/products';
@@ -95,9 +128,16 @@
     document.getElementById('loginForm').addEventListener('submit', function(event) {
         event.preventDefault();
 
+        const recaptchaResponse = grecaptcha.getResponse(loginRecaptchaWidgetId);
+        if (!recaptchaResponse) {
+            alert("Please verify that you're not a robot.");
+            return;
+        }
+
         const loginData = {
             username: document.getElementById('loginUsername').value,
-            password: document.getElementById('loginPassword').value
+            password: document.getElementById('loginPassword').value,
+            recaptchaToken: recaptchaResponse
         };
 
         fetch('/api/auth/login', {
@@ -110,6 +150,7 @@
             credentials: 'include'
         })
             .then(response => {
+                grecaptcha.reset(loginRecaptchaWidgetId);
                 if (!response.ok) {
                     return response.text().then(text => { throw new Error(text); });
                 }
