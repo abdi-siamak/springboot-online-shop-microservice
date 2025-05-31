@@ -59,8 +59,10 @@
         </td>
     </tr>
     </tbody>
-</table>
+</table><br>
 <button type="button" id="addProductBtn" class="addProduct-btn">Add</button>
+<br><br>
+
 
 <h2>Users</h2>
 <table border="1">
@@ -81,9 +83,8 @@
         </td>
     </tr>
     </tbody>
-</table>
+</table><br>
 <button type="button" id="addUserBtn" class="addUser-btn">Add</button><br><br><br>
-
 
 <div class="logout">
     <button type="button" id="logoutBtn" class="btn-logout">Logout</button>
@@ -144,10 +145,12 @@
         event.preventDefault();
         if (this.checkValidity()) {
             const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value,
-                role: document.getElementById('role').value,
+                user: {
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value,
+                    role: document.getElementById('role').value
+                },
             };
 
             fetch('/api/users/register', {
@@ -163,7 +166,6 @@
                     if (response.ok) {
                         alert("New User registered successfully.");
                         window.location.reload();
-
                     } else {
                         return response.text().then(text => { throw new Error(text); });
                     }
@@ -172,7 +174,7 @@
                     alert(error.message);
                 });
 
-            document.getElementById('productFormModal').style.display = 'none';
+            document.getElementById('userFormModal').style.display = 'none';
         } else {
             this.reportValidity();
         }

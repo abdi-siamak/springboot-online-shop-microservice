@@ -10,7 +10,7 @@
 
 <div th:if="${userRole == T(com.siamak.shop.model.Role).ADMIN}">
     <button id="adminBtn" class="admin-btn">Admin</button>
-</div>
+</div><br>
 
 <table border="1">
     <thead>
@@ -26,13 +26,17 @@
         <td th:text="${item.product.name}"></td>
         <td th:text="${item.product.price}"></td>
         <td th:text="${item.quantity}"></td>
-        <td th:text="${item.product.price * item.quantity}"></td>
+        <td th:text="${item.getTotalPrice()}"></td>
         <td>
             <button type="button" class="remove-btn" th:data-id="${item.product.id}">Remove</button>
         </td>
     </tr>
     </tbody>
 </table><br>
+
+<div class="total-price">
+    <h3>Total Price: <span th:text="${#numbers.formatDecimal(totalPrice, 2, 2)}">0.00</span></h3>
+</div><br>
 
 <div class="buttons">
     <button id="purchaseBtn" class="btn-purchase">Purchase</button>

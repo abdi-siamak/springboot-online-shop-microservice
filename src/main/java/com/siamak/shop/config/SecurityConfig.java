@@ -1,7 +1,6 @@
 package com.siamak.shop.config;
 
 import com.siamak.shop.filter.CsrfTokenResponseHeaderBindingFilter;
-import com.siamak.shop.security.CustomUserDetailsService;
 import com.siamak.shop.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -19,7 +18,6 @@ import org.springframework.security.crypto.bcrypt.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.*;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -52,7 +50,7 @@ public class SecurityConfig {
                         // Allow access to static resources like HTML, CSS, JS
                         .requestMatchers("/", "/css/**", "/js/**", "/images/**").permitAll()
                         // Public endpoints
-                        .requestMatchers("/api/auth/login", "/api/auth/logout","/api/users/register").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/logout","/api/users/register", "/actuator/prometheus").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         // Protected endpoints
                         .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")
@@ -62,8 +60,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .with(new OAuth2LoginConfigurer<HttpSecurity>(), oauth2 ->
-                    oauth2
-                            .defaultSuccessUrl("/products", true)
+                        oauth2
+                                .defaultSuccessUrl("/products", true)
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

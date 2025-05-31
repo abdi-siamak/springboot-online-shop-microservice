@@ -7,16 +7,18 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import com.siamak.shop.security.JwtUtils;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -31,6 +33,7 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtils jwtUtils;
+    private final UserDetailsService userDetailsService;
 
     /*
     @PostMapping("/register")
@@ -50,13 +53,18 @@ public class UserController {
     */
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest registerRequest, HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest registerRequest,
+                                                        HttpServletRequest request,
+                                                        HttpServletResponse response) {
         Map<String, String> responseBody = new HashMap<>();
         User user = registerRequest.getUser();
 
-        boolean captchaVerified = verifyCaptcha(registerRequest.getRecaptchaToken());
+        // Check if request is from admin page
+        String refererHeader = request.getHeader("Referer");
+        boolean isFromAdminReferer = refererHeader != null && refererHeader.contains("/admin");
 
-        if (!captchaVerified) {
+        if (!isFromAdminReferer && !verifyCaptcha(registerRequest.getRecaptchaToken())) {
+
             responseBody.put("message", "Captcha verification failed");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
         }
@@ -66,28 +74,29 @@ public class UserController {
                 responseBody.put("message", "User has already registered!");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
             }
+
             userService.registerUser(user);
 
-            // Check for existing JWT cookie
-            String existingToken = null;
-            if (request.getCookies() != null) {
-                for (Cookie cookie : request.getCookies()) {
-                    if ("jwt".equals(cookie.getName())) {
-                        existingToken = cookie.getValue();
-                        break;
-                    }
-                }
+            if (isFromAdminReferer) {
+                responseBody.put("message", "User registered successfully.");
+                //SecurityContextHolder.getContext().setAuthentication(authentication);
+                return ResponseEntity.ok(responseBody);
             }
+            // Automatically authenticate the user (we trust the user here)
+            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+            Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(auth);
 
-            if (existingToken == null || !jwtUtils.validateToken(existingToken)) {
-                String token = jwtUtils.generateToken(user.getEmail());
-                response.setHeader("Authorization", "Bearer " + token);
-                Cookie cookie = new Cookie("jwt", token);
-                cookie.setHttpOnly(true);
-                cookie.setPath("/");
-                cookie.setMaxAge(24 * 60 * 60); // 1 day
-                response.addCookie(cookie);
-            }
+            // Generate and send JWT token
+            String token = jwtUtils.generateToken(user.getEmail());
+
+            response.setHeader("Authorization", "Bearer " + token);
+
+            Cookie cookie = new Cookie("jwt", token);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(24 * 60 * 60);
+            response.addCookie(cookie);
 
             responseBody.put("message", "User registered successfully.");
             return ResponseEntity.ok(responseBody);
@@ -96,6 +105,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
         }
     }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")

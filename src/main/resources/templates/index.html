@@ -49,12 +49,13 @@
     <br>
     <div><button id="forgotPasswordBtn" class="btn-forgotPassword" type="button">Forgot Password</button></div>
 </form>
-<div id="forgotPasswordModal" style="display:none; border:1px solid #ccc; padding:20px; margin-top:20px;">
+
+<div id="forgotPasswordModal" style="display:none; position:fixed; top:20%; left:35%; background:#f0f0f0; padding:50px; border:1px solid #ccc; z-index:1000;">
     <h3>Forgot Password</h3>
     <label for="forgotEmail">Enter your email:</label><br>
     <input type="email" id="forgotEmail" required><br><br>
     <button id="sendResetLinkBtn">Send Reset Link</button>
-    <button onclick="closeForgotModal()">Cancel</button>
+    <button type="button" onclick="document.getElementById('forgotPasswordModal').style.display='none'">Cancel</button>
 </div>
 
 
@@ -171,10 +172,6 @@
         document.getElementById('forgotPasswordModal').style.display = 'block';
     })
 
-    function closeForgotModal() {
-        document.getElementById('forgotPasswordModal').style.display = 'none';
-    }
-
     document.getElementById('sendResetLinkBtn').addEventListener('click', function () {
         const email = document.getElementById('forgotEmail').value;
 
@@ -194,7 +191,7 @@
         })
             .then(response => {
                 if (response.ok){
-                    alert("Reset link sent to your email.");
+                    alert("A password reset link has been sent if the email is registered.");
                     closeForgotModal();
                 } else {
                     alert("unsuccessful");
@@ -205,6 +202,10 @@
                 alert("Error: " + error.message);
             })
     })
+
+    function closeForgotModal() {
+        document.getElementById('forgotPasswordModal').style.display = 'none';
+    }
 
 </script>
 </body>

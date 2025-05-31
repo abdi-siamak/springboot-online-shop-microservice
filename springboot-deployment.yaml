@@ -15,6 +15,7 @@ spec:
       containers:
         - name: springboot-app
           image: abdisiamak/springboot-online-shop:tag
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
@@ -24,3 +25,9 @@ spec:
               value: myuser
             - name: SPRING_DATASOURCE_PASSWORD
               value: mypass
+            - name: JAVA_TOOL_OPTIONS
+              value: >
+                -javaagent:/otel/opentelemetry-javaagent.jar
+                -Dotel.traces.exporter=otlp
+                -Dotel.exporter.otlp.endpoint=http://jaeger.monitoring.svc.cluster.local:4317
+                -Dotel.resource.attributes=service.name=springboot-service

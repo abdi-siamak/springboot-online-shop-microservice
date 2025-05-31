@@ -1,13 +1,11 @@
 package com.siamak.shop.controller;
 
-import com.siamak.shop.dto.AuthRequest;
 import com.siamak.shop.dto.LoginRequest;
 import com.siamak.shop.dto.ResetPasswordRequest;
 import com.siamak.shop.security.JwtUtils;
 import com.siamak.shop.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,13 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.ui.Model;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.Cookie;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +60,7 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityContextHolder.getContext().setAuthentication(authentication); // storing authentication info in the session or a cookie/token.
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
         // Generate the JWT token

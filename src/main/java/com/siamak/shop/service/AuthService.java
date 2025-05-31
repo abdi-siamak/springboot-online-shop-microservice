@@ -5,7 +5,6 @@ import com.siamak.shop.model.User;
 import com.siamak.shop.repository.PasswordResetTokenRepository;
 import com.siamak.shop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +22,11 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public void initiatePasswordReset(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+        if(userRepository.findByEmail(email).isEmpty()){
+            return;
+        }
+
+        User user = userRepository.findByEmail(email).get();
 
         // Check if a token already exists for the user
         Optional<PasswordResetToken> existingTokenOpt = tokenRepository.findByUser(user);

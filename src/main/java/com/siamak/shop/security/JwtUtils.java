@@ -2,6 +2,8 @@ package com.siamak.shop.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -10,10 +12,17 @@ import java.util.Date;
 @Component
 public class JwtUtils {
 
-    private final String jwtSecret = "my-super-secret-key-for-jwt-siamaak123456"; // use env var later
-    private final long jwtExpirationMs = 86400000; // 1 day
+    @Value("${JWT_SECRET}")
+    private String jwtSecret; // use env var later
+    @Value("${JWT_EXPIRATION_MS}")
+    private long jwtExpirationMs; // 1 day, same as cookie
 
-    private final Key key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    private Key key;
+
+    @PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
 
     public String generateToken(String username) {
         return Jwts.builder()

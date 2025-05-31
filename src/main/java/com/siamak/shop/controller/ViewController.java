@@ -1,5 +1,6 @@
 package com.siamak.shop.controller;
 
+import com.siamak.shop.model.CartItem;
 import com.siamak.shop.model.User;
 import com.siamak.shop.service.CartService;
 import com.siamak.shop.service.ProductService;
@@ -9,14 +10,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
 import java.security.Principal;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -77,7 +78,14 @@ public class ViewController {
 
     @GetMapping("/cart")
     public String cart(Model model, Principal principal) {
+        List<CartItem> cartItems = cartService.getItems();
+        BigDecimal totalPrice = cartItems.stream()
+                .map(CartItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         model.addAttribute("cartItems", cartService.getItems()); // Make cartItems available in the HTML template as a variable.
+        model.addAttribute("totalPrice", totalPrice);
+
         Optional<User> user = userService.findByEmail(principal.getName());
         User cartUser = user.orElseThrow(() -> new RuntimeException("User not found"));
         model.addAttribute("userRole", cartUser.getRole());
