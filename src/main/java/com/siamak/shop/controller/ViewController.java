@@ -6,6 +6,7 @@ import com.siamak.shop.service.CartService;
 import com.siamak.shop.service.ProductService;
 import com.siamak.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,6 +31,8 @@ public class ViewController {
     private ProductService productService;
     @Autowired
     private UserService userService;
+    @Value("${paypal.client.id}")
+    private String paypalClientId;
 
     public String index() {
         return "index";
@@ -91,5 +94,11 @@ public class ViewController {
         model.addAttribute("userRole", cartUser.getRole());
 
         return "cart";
+    }
+
+    @GetMapping("/payment")
+    public String paymentPage(Model model) {
+        model.addAttribute("clientId", paypalClientId);
+        return "payment";
     }
 }

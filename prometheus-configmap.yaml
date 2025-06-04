@@ -14,7 +14,7 @@ data:
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
-      - job_name: 'springboot-service'
+      - job_name: 'springboot-app'
         metrics_path: /actuator/prometheus
         scheme: http
         static_configs:

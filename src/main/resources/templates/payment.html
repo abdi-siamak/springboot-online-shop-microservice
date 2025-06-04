@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Pay with PayPal</title>
+  <script th:src="'https://www.paypal.com/sdk/js?client-id='+${clientId}+'&currency=EUR'"></script>
+</head>
+<body>
+<h2>Confirm Your Purchase</h2>
+<div id="paypal-button-container"></div>
+
+<script>
+  paypal.Buttons({
+    createOrder: function(data, actions) {
+      // Call your backend to create the order
+      return fetch('/api/paypal/pay?amount=10.00', {
+        method: 'POST'
+      }).then(function(response) {
+        if (!response.ok) {
+          throw new Error("Failed to create PayPal order");
+        }
+        return response.url;
+      }).then(function(redirectUrl) {
+        // Redirect to PayPal approval page
+        window.location.href = redirectUrl;
+      });
+    }
+  }).render('#paypal-button-container');
+</script>
+</body>
+</html>

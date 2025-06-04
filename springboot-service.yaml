@@ -6,6 +6,6 @@ spec:
   selector:
     app: springboot-app
   ports:
-    - port: 8080
-      targetPort: 8080
-  type: NodePort
+    - port: 8080  # external port
+      targetPort: 8080 # container port
+  type: LoadBalancer
