@@ -2,10 +2,22 @@ package com.siamak.shop.repository;
 
 import com.siamak.shop.model.Order;
 import com.siamak.shop.model.User;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
+import java.util.Optional;
+
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findByUser(User user);
+
+    Optional<Order> findByUser(User user); // ok
+    Optional<Order> findById(Long orderId);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Order o SET o.status = :status WHERE o.id = :orderId")
+    int updateOrderStatus(Long orderId, String status);
+
 }

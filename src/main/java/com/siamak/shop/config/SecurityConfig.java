@@ -52,7 +52,7 @@ public class SecurityConfig {
                         // Allow access to static resources like HTML, CSS, JS
                         .requestMatchers("/", "/css/**", "/js/**", "/images/**").permitAll()
                         // Public endpoints
-                        .requestMatchers("/api/auth/login", "/api/auth/logout","/api/users/register", "/actuator/prometheus").permitAll()
+                        .requestMatchers("/api/auth/status","/api/auth/login", "/api/auth/logout","/api/users/register", "/actuator/prometheus","/paypal/**", "/products", "/cart", "/api/cart/**", "/loginPage", "/payment").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         // Protected endpoints
                         .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")

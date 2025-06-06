@@ -43,7 +43,7 @@ public class CartService {
         items.clear();
     }
 
-    public int getTotalItems() {
+    public int getTotalNumberOfItems() {
         return items.size();
     }
 }

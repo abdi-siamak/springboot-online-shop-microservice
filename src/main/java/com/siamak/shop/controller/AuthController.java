@@ -4,6 +4,7 @@ import com.siamak.shop.dto.LoginRequest;
 import com.siamak.shop.dto.ResetPasswordRequest;
 import com.siamak.shop.security.JwtUtils;
 import com.siamak.shop.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,9 +14,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.Cookie;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -82,18 +86,39 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        // Clear the JWT from cookies
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        // Clear cookie
         Cookie cookie = new Cookie("jwt", null);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setMaxAge(0); // expires immediately
+        cookie.setMaxAge(0);
         response.addCookie(cookie);
 
-        response.setHeader("Authorization", "");
+        // Clear Spring Security context
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            new SecurityContextLogoutHandler().logout(request, response, auth);
+        }
 
-        return ResponseEntity.ok("Logged out");
+        request.getSession().invalidate();
+
+        boolean isOauth = auth instanceof OAuth2AuthenticationToken;
+
+        Map<String, String> result = new HashMap<>();
+        result.put("type", isOauth ? "oauth2" : "jwt");
+
+        return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/status")
+    public ResponseEntity<?> checkAuthStatus(Principal principal) {
+        if (principal != null) {
+            return ResponseEntity.ok().body("Authenticated");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        }
+    }
+
 
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestParam String email) {
