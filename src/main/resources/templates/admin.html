@@ -118,7 +118,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    [csrfHeader]: csrfToken
                 },
                 body: JSON.stringify(formData),
                 credentials: 'include'
@@ -157,7 +157,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    [csrfHeader]: csrfToken
                 },
                 body: JSON.stringify(formData),
                 credentials: 'include'
@@ -185,7 +185,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
+                [csrfHeader]: csrfToken
             },
             credentials: 'include'
         })
@@ -213,7 +213,7 @@
                 method: "DELETE",
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
+                    [csrfHeader]: csrfToken
                 },
             })
                 .then(res => {
@@ -240,7 +240,7 @@
                 method: "DELETE",
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
+                    [csrfHeader]: csrfToken
                 },
             })
                 .then(res => {

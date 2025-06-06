@@ -13,9 +13,9 @@ import java.util.Date;
 public class JwtUtils {
 
     @Value("${JWT_SECRET}")
-    private String jwtSecret; // use env var later
+    private String jwtSecret;
     @Value("${JWT_EXPIRATION_MS}")
-    private long jwtExpirationMs; // 1 day, same as cookie
+    private long jwtExpirationMs;
 
     private Key key;
 

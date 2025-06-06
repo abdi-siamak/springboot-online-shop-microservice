@@ -5,6 +5,7 @@ import com.siamak.shop.model.User;
 import com.siamak.shop.repository.PasswordResetTokenRepository;
 import com.siamak.shop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthService {
 
+    @Value("${SPRING_BOOT_URL_PATH}")
+    private String SPRING_BOOT_URL_PATH;
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository tokenRepository;
     private final EmailService emailService;
@@ -40,7 +43,7 @@ public class AuthService {
                 .build();
 
         tokenRepository.save(resetToken);
-        String resetLink = "http://localhost:8080/reset/reset-password?token=" + token;
+        String resetLink = SPRING_BOOT_URL_PATH +"/reset/reset-password?token=" + token;
 
         emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
     }

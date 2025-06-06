@@ -45,8 +45,7 @@
 </head>
 <body>
 <h2>Available Products</h2>
-
-<div th:if="${userRole == T(com.siamak.shop.model.Role).ADMIN}">
+<div th:if="${authenticatedUser} and ${userRole == T(com.siamak.shop.model.Role).ADMIN}">
     <button id="adminBtn" class="admin-btn">Admin</button>
 </div>
 
@@ -64,11 +63,19 @@
 
 <div class="actions">
     <button id="cartBtn" class="btn-cart">Cart</button>
-    <button id="logoutBtn" class="btn-logout">Logout</button>
+    <br><br>
+    <div th:if="${authenticatedUser}">
+        <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+    <div th:unless="${authenticatedUser}">
+        <button id="loginBtn" class="btn-login">Login</button>
+    </div>
 </div>
 
 <script>
     const adminBtn = document.getElementById('adminBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginBtn = document.getElementById('loginBtn');
     const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
@@ -86,7 +93,7 @@
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
+                [csrfHeader]: csrfToken
             },
         })
             .then(res => res.text())
@@ -99,7 +106,7 @@
             method: "DELETE",
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
+                [csrfHeader]: csrfToken
             },
         })
             .then(res => res.text())
@@ -107,26 +114,43 @@
             .catch(err => alert("Error removing from cart: " + err.message));
     }
 
-    document.getElementById('logoutBtn').addEventListener('click', function () {
-        fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            credentials: 'include'
-        })
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = '/';
-                } else {
-                    return response.text().then(text => { throw new Error(text); });
-                }
+    if (logoutBtn) {
+        document.getElementById('logoutBtn').addEventListener('click', function () {
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                credentials: 'include'
             })
-            .catch(error => {
-                alert("Logout failed: " + error.message);
-            });
-    });
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error(text); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.type === "oauth2") {
+                        const appLogoutRedirect = encodeURIComponent("http://localhost:8080/");
+                        const appEngineLogout = `https://appengine.google.com/_ah/logout?continue=${appLogoutRedirect}`;
+                        const googleLogout = `https://accounts.google.com/Logout?continue=${encodeURIComponent(appEngineLogout)}`;
+                        window.location.href = googleLogout;
+                    } else {
+                        window.location.href = "/";
+                    }
+                })
+                .catch(error => {
+                    alert("Logout failed: " + error.message);
+                });
+        });
+    }
+
+    if (loginBtn) {
+        document.getElementById('loginBtn').addEventListener('click', function () {
+            window.location.href = "/loginPage";
+        })
+    }
 
     document.getElementById('cartBtn').addEventListener('click', function () {
         window.location.href = "/cart";

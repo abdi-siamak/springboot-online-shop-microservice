@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PayPal Payment</title>
+  <meta name="_csrf" th:content="${_csrf.token}" />
+  <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+<body>
+<h1>Payment Methods</h1>
+<br>
+<div class="total-price">
+  <span id="total-price" th:text="'Total price: ' + ${totalPrice} + ' EUR'" th:attr="data-total-price=${totalPrice}">0.00</span>
+</div>
+<br>
+
+<div class="shipping-address">
+  <h2>Your shipping address</h2>
+  <form id="shippingForm" action="/submit-shipping" method="POST">
+    <label for="fullName">Full Name:<span style="color:red">*</span></label><br>
+    <input type="text" id="fullName" name="fullName" required><br><br>
+
+    <label for="street">Street Address:<span style="color:red">*</span></label><br>
+    <input type="text" id="street" name="street" required><br><br>
+
+    <label for="city">City:<span style="color:red">*</span></label><br>
+    <input type="text" id="city" name="city" required><br><br>
+
+    <label for="postalCode">Postal Code:<span style="color:red">*</span></label><br>
+    <input type="text" id="postalCode" name="postalCode" required><br><br>
+
+    <label for="country">Country:<span style="color:red">*</span></label><br>
+    <input type="text" id="country" name="country" required><br><br>
+
+    <button type="button" onclick="payWithPayPal()">Pay Now with PayPal</button>
+    <p id="message" style="color: green; margin-top: 20px;"></p>
+  </form>
+</div>
+
+<script>
+  const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+  const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+  const amount = document.getElementById('total-price').getAttribute('data-total-price');
+
+  async function payWithPayPal() {
+
+    if (!amount || isNaN(amount) || amount <= 0) {
+      alert("Amount is not valid!");
+      return;
+    }
+
+    const authCheck = await fetch('/api/auth/status', {
+      headers: {
+        'Content-Type': 'application/json',
+        [csrfHeader]: csrfToken
+      },
+      credentials: 'include' });
+
+    if(authCheck.status === 401) {
+      window.location.href = '/loginPage';
+      return
+    }
+
+    const form = document.getElementById('shippingForm');
+    const formData = new FormData(form);
+
+    const shippingData = {
+      fullName: formData.get('fullName'),
+      street: formData.get('street'),
+      city: formData.get('city'),
+      postalCode: formData.get('postalCode'),
+      country: formData.get('country'),
+      phone: formData.get('phone'),
+      amount: amount
+    };
+
+    try{
+      // Save shipping info
+      const saveResponse = await fetch('/api/order/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          [csrfHeader]: csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify(shippingData)
+      });
+
+      if (!saveResponse.ok){
+        const error = await saveResponse.text();
+        alert("Error saving shipping info: "+ error);
+        return;
+      }
+      const orderId = await saveResponse.text();
+
+      // Start PayPal payment flow
+      const paymentResponse = await fetch(`/paypal/create-payment?amount=${amount}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          [csrfHeader]: csrfToken
+        },
+        credentials: 'include'
+      });
+
+      if (!paymentResponse.ok) {
+        const errorMsg = await paymentResponse.text();
+        alert("Error creating payment: " + errorMsg);
+        return;
+      }
+
+      const approvalUrl = await paymentResponse.text();
+      // Redirect user to PayPal approval URL
+      window.location.href = approvalUrl;
+    } catch (error) {
+      alert("Error connecting to payment server.");
+      console.error(error);
+    }
+  }
+
+  // parse URL params to show success or cancel messages
+  window.onload = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('paymentId') && urlParams.has('PayerID')) {
+      document.getElementById('message').textContent = "Payment successful! Thank you.";
+    } else if (urlParams.has('cancel')) {
+      document.getElementById('message').textContent = "Payment cancelled.";
+    }
+  }
+</script>
+
+</body>
+</html>

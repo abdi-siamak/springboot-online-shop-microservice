@@ -17,6 +17,8 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Double amount;
+
     private LocalDateTime orderDate;
 
     private String status; // e.g., PENDING, PAID, SHIPPED
@@ -24,6 +26,9 @@ public class Order {
     @ManyToOne
     private User user;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
+
+    @Embedded
+    private ShippingData shippingData;
 }
