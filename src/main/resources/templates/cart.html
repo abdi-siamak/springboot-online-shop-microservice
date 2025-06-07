@@ -48,6 +48,9 @@
 <div class="buttons">
     <button id="purchaseBtn" class="btn-purchase">Purchase</button>
     <button id="productsBtn" class="btn-products" style="margin-left: 10px;">Products</button>
+    <span th:if="${authenticatedUser}" style="margin-left: 10px;">
+        <button id="ordersBtn" class="btn-orders">Orders</button>
+    </span>
 </div><br><br>
 
 <div class="actions">
@@ -69,6 +72,7 @@
     const adminBtn = document.getElementById('adminBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const loginBtn = document.getElementById('loginBtn');
+    const ordersBtn = document.getElementById('ordersBtn');
     const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
@@ -76,6 +80,12 @@
         adminBtn.addEventListener('click', function () {
             window.location.href = "/admin";
         });
+    }
+
+    if (ordersBtn) {
+        document.getElementById('ordersBtn').addEventListener('click', function () {
+            window.location.href = "/orders";
+        })
     }
 
     document.getElementById('purchaseBtn').addEventListener('click', function () {

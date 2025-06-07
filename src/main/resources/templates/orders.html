@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Your Orders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .order-container {
+            background: white;
+            border: 2px solid #007BFF;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .order-header {
+            border-bottom: 2px solid #007BFF;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            color: #007BFF;
+            font-weight: bold;
+        }
+        .order-info p {
+            margin: 5px 0;
+        }
+        h3 {
+            margin-top: 20px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        tbody tr:nth-child(odd) {
+            background-color: #f2f8ff;
+        }
+        tbody tr:hover {
+            background-color: #d9eaff;
+        }
+        .no-orders {
+            text-align: center;
+            margin-top: 50px;
+            font-style: italic;
+            color: #666;
+            font-size: 1.2em;
+        }
+        .order-container {
+            position: relative;
+        }
+        .delete-form {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .delete-form button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-form button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Your Orders</h1>
+
+<div th:if="${userOrders == null or #lists.isEmpty(userOrders)}">
+    <p>You have no orders yet.</p>
+</div>
+
+<div th:each="order : ${userOrders}" class="order-container">
+    <form th:action="@{/api/order/delete}" method="post" class="delete-form">
+        <input type="hidden" name="order_id" th:value="${order.id}" />
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <button type="submit">✕</button>
+
+    </form>
+    <div class="order-header">
+        Order #<span th:text="${order.id}"></span> -
+        <span th:text="${#temporals.format(order.orderDate, 'dd MMM yyyy HH:mm')}"></span> -
+        <span th:text="${order.status}"></span>
+    </div>
+
+    <div class="order-info">
+        <p><strong>Total Amount:</strong> $<span th:text="${order.amount}"></span></p>
+
+        <h3>Shipping Details</h3>
+        <p><strong>Name:</strong> <span th:text="${order.shippingData.fullName}"></span></p>
+        <p><strong>Street:</strong> <span th:text="${order.shippingData.street}"></span></p>
+        <p><strong>City:</strong> <span th:text="${order.shippingData.city}"></span></p>
+        <p><strong>Postal Code:</strong> <span th:text="${order.shippingData.postalCode}"></span></p>
+        <p><strong>Country:</strong> <span th:text="${order.shippingData.country}"></span></p>
+        <p><strong>Phone:</strong> <span th:text="${order.shippingData.phone != null ? order.shippingData.phone : 'N/A'}"></span></p>
+    </div>
+
+    <h3>Order Items</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price (each)</th>
+            <th>Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${order.items}">
+            <td th:text="${item.product.name}"></td>
+            <td th:text="${item.quantity}"></td>
+            <td>$<span th:text="${item.product.price}"></span></td>
+            <td>$<span th:text="${item.product.price.multiply(T(java.math.BigDecimal).valueOf(item.quantity + 0L))}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div><br><br>
+<div class="buttons">
+    <button id="productsBtn" class="btn-products">Products</button>
+</div><br><br>
+
+<script>
+    document.getElementById('productsBtn').addEventListener('click', function () {
+        window.location.href = "/products";
+    });
+</script>
+</body>
+</html>
