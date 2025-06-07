@@ -35,12 +35,18 @@
     <button type="button" onclick="payWithPayPal()">Pay Now with PayPal</button>
     <p id="message" style="color: green; margin-top: 20px;"></p>
   </form>
-</div>
-
+</div><br><br>
+<div class="buttons">
+  <button id="productsBtn" class="btn-products">Products</button>
+</div><br><br>
 <script>
   const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
   const amount = document.getElementById('total-price').getAttribute('data-total-price');
+
+  document.getElementById('productsBtn').addEventListener('click', function () {
+    window.location.href = "/products";
+  });
 
   async function payWithPayPal() {
 

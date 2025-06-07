@@ -4,34 +4,45 @@ import com.siamak.shop.dto.ShippingDataRequest;
 import com.siamak.shop.model.*;
 import com.siamak.shop.service.CartService;
 import com.siamak.shop.service.OrderService;
-import lombok.Data;
+import com.siamak.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-@RestController
+
+@Controller
 @RequestMapping("/api/order")
 @RequiredArgsConstructor
 public class OrderController {
 
     private final OrderService orderService;
     private final CartService cartService;
+    private final UserService userService;
 
     @PostMapping("/save")
-    public ResponseEntity<Void> save(@RequestBody ShippingDataRequest request, @AuthenticationPrincipal User currentUser) {
+    @ResponseBody
+    public ResponseEntity<Void> save(@RequestBody ShippingDataRequest request, Authentication authentication) {
+        String email = authentication.getName(); // or username
+        Optional<User> optionalUser = userService.findByEmail(email);
+
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User currentUser = optionalUser.get();
         // Create a new order
         Order newOrder = new Order();
         newOrder.setOrderDate(LocalDateTime.now());
         newOrder.setStatus("PENDING");
-        newOrder.setUser(currentUser);
+        newOrder.setUser(currentUser);///****
         newOrder.setShippingData(new ShippingData(
                 request.getFullName(),
                 request.getPhone(),
@@ -54,25 +65,33 @@ public class OrderController {
                     .build();
         }).collect(Collectors.toList());
 
-        newOrder.setItems(orderItems);
+        newOrder.setItems(orderItems);///****
 
         orderService.save(newOrder);
 
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/retrieve")
-    public ResponseEntity retrieve(@RequestBody User user) {
-        orderService.retrieve(user);
-
-        return ResponseEntity.ok().build();
+    @PostMapping("/delete")
+    public String delete(@RequestParam("order_id") Long orderId) {
+        orderService.deleteOrder(orderId);
+        return "redirect:/orders";
     }
 
+
+    /*
+    @PostMapping("/retrieve")
+    public ResponseEntity<OrderDTO> retrieve(Principal principal) {
+
+    }
+     */
+
+    /*
     @PostMapping("/update")
     public ResponseEntity update(@RequestBody Long orderId, String status) {
         orderService.updateOrderStatus(orderId, status);
 
         return ResponseEntity.ok().build();
     }
-
+    */
 }

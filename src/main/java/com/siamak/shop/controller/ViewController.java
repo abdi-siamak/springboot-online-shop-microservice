@@ -1,12 +1,16 @@
 package com.siamak.shop.controller;
 
 import com.siamak.shop.model.CartItem;
+import com.siamak.shop.model.Order;
 import com.siamak.shop.model.User;
 import com.siamak.shop.service.CartService;
+import com.siamak.shop.service.OrderService;
 import com.siamak.shop.service.ProductService;
 import com.siamak.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,6 +34,8 @@ public class ViewController {
     private ProductService productService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private OrderService orderService;
     @Value("${paypal.client.id}")
     private String paypalClientId;
 
@@ -119,5 +125,21 @@ public class ViewController {
         model.addAttribute("totalPrice", cartService.getItems().stream().map(CartItem::getTotalPrice).reduce(BigDecimal.ZERO,  BigDecimal::add));
 
         return "payment";
+    }
+
+    @GetMapping("/orders")
+    public String orders(Model model, Authentication authentication) {
+        String email = authentication.getName();
+        Optional<User> userOpt = userService.findByEmail(email);
+
+        if (userOpt.isEmpty()) {
+            return "redirect:/error";
+        }
+
+        Long userId = userOpt.get().getId();
+        List<Order> userOrders = orderService.retrieveOrdersByUserId(userId);
+        model.addAttribute("userOrders", userOrders);
+
+        return "orders";
     }
 }

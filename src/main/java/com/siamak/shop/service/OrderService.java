@@ -6,6 +6,9 @@ import com.siamak.shop.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -16,8 +19,8 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public Order retrieve(User user) {
-        return orderRepository.findByUser(user).orElse(null);
+    public List<Order> retrieveOrdersByUserId(Long userId) {
+        return orderRepository.findAllByUserId(userId);
     }
 
     public void updateOrderStatus(Long orderId, String status) {
@@ -25,6 +28,11 @@ public class OrderService {
         if (updated == 0) {
             // Order not found
         }
+    }
+
+    public void deleteOrder(Long orderId) {
+        orderRepository.deleteById(orderId);
+        System.out.println("DONE");
     }
 
 }
