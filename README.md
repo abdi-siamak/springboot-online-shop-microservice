@@ -15,7 +15,8 @@ This is a simple online shop project built using **Spring Boot** and **PostgreSQ
 - Cookie-based session management
 - Product browsing and details display
 - Shopping cart functionality with user cart page
-- Checkout system
+- Checkout system with PayPal integration
+- Order tracking system with real-time status updates
 - Admin control page for product and user management
 - PostgreSQL database integration
 
@@ -27,6 +28,8 @@ This is a simple online shop project built using **Spring Boot** and **PostgreSQ
 - **OAuth2 (Google Sign-In)**: Social login integration
 - **Spring Security**: Security configuration including CSRF and cookie-based auth
 - **Spring Data JPA**: Database interaction
+- **PayPal Java SDK**: Payment gateway integration for checkout
+- **Thymeleaf**: Templating engine for frontend views
 
 ## Installation
 
@@ -52,13 +55,19 @@ This is a simple online shop project built using **Spring Boot** and **PostgreSQ
       spring.datasource.password=your_password
       spring.jpa.hibernate.ddl-auto=update
       ```
+3. **Configure PayPal credentials**:
+    - Add your PayPal API client ID and secret to the `application.properties`:
+      ```properties
+      paypal.client.id=your_paypal_client_id
+      paypal.client.secret=your_paypal_secret
+      paypal.mode=sandbox  # or 'live' for production
 
-3. **Build the application**:
+4. **Build the application**:
     ```bash
     mvn clean install
     ```
 
-4. **Run the application**:
+5. **Run the application**:
     ```bash
     mvn spring-boot:run
     ```
@@ -82,6 +91,11 @@ The application will run on `http://localhost:8080` by default.
 - **POST /api/cart/add**: Add a product to the cart
 - **GET /api/cart**: View the current cart contents
 - **POST /api/cart/checkout**: Proceed to checkout and place an order
+
+### Order Tracking
+
+- **GET /api/orders/{orderId}/status**: Check the current status of an order (e.g., `Pending`, `Processing`, `Shipped`, `Delivered`)
+- **GET /api/orders**: View all orders placed by the current user
 
 ## License
 
