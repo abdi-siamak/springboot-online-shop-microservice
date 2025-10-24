@@ -5,7 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
-@Entity
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,14 +14,10 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
-
     private String description;
-
+    private String image_url;
     private BigDecimal price;
+    private Integer quantity;
 
-    private int quantity;
-
-    private String imageUrl;
 }

@@ -58,7 +58,7 @@ public class OrderController {
 
         List<OrderItem> orderItems = cartItems.stream().map(cartItem -> {
             return OrderItem.builder()
-                    .product(cartItem.getProduct())
+                    .productId(cartItem.getProduct().getId())
                     .quantity(cartItem.getQuantity())
                     .price(cartItem.getTotalPrice())
                     .order(newOrder)
@@ -74,24 +74,17 @@ public class OrderController {
 
     @PostMapping("/delete")
     public String delete(@RequestParam("order_id") Long orderId) {
+        System.out.println("order removed   "+orderId);
         orderService.deleteOrder(orderId);
-        return "redirect:/orders";
+        return "redirect:/orders"; // HTTP 302 redirect response to the client.
     }
 
 
-    /*
-    @PostMapping("/retrieve")
-    public ResponseEntity<OrderDTO> retrieve(Principal principal) {
-
-    }
-     */
-
-    /*
     @PostMapping("/update")
-    public ResponseEntity update(@RequestBody Long orderId, String status) {
+    public ResponseEntity<?> update(@RequestBody Long orderId, String status) {
         orderService.updateOrderStatus(orderId, status);
 
         return ResponseEntity.ok().build();
     }
-    */
+
 }

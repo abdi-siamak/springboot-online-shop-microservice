@@ -18,7 +18,7 @@
         <label>Description: <input type="text" id="productDescription" required/><span style="color:red">*</span></label><br><br>
         <label>Price: <input type="number" id="productPrice" required/><span style="color:red">*</span></label><br><br>
         <label>Quantity: <input type="number" id="productQuantity" required/><span style="color:red">*</span></label><br><br>
-        <label>Image URL: <input type="text" id="productImageUrl" /></label><br><br>
+        <label>Image URL: <input type="text" id="productImage_url" /></label><br><br>
         <button type="submit" id="submitProductBtn">Submit</button>
         <button type="button" onclick="document.getElementById('productFormModal').style.display='none'">Cancel</button>
     </form>
@@ -55,7 +55,8 @@
         <td th:text="${product.description}"></td>
         <td th:text="${product.price}"></td>
         <td>
-            <button type="button" id="removeProductBtn" class="removeProduct-btn" th:data-id="${product.id}">Remove</button>
+            <button type="button" class="editPrice-btn" th:data-id="${product.id}">Edit Price</button>
+            <button type="button" class="removeProduct-btn" th:data-id="${product.id}">Remove</button>
         </td>
     </tr>
     </tbody>
@@ -111,7 +112,7 @@
                 description: document.getElementById('productDescription').value,
                 price: parseFloat(document.getElementById('productPrice').value),
                 quantity: parseInt(document.getElementById('productQuantity').value),
-                imageUrl: document.getElementById('productImageUrl').value
+                image_url: document.getElementById('productImage_url').value
             };
 
             fetch('/api/products', {
@@ -251,6 +252,37 @@
                     }
                 })
                 .catch(err => alert("Error removing user: " + err.message));
+        });
+    });
+
+    // --- Edit Price functionality ---
+    document.querySelectorAll('.editPrice-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.getAttribute('data-id');
+            const newPrice = prompt("Enter new price for this product:");
+
+            if (newPrice && !isNaN(newPrice)) {
+                fetch(`/api/products/${productId}/price`, {
+                    method: "PUT",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify({ price: parseFloat(newPrice) }),
+                    credentials: 'include'
+                })
+                .then(res => {
+                    if (res.ok) {
+                        alert("Price updated successfully!");
+                        window.location.reload();
+                    } else {
+                        return res.text().then(msg => alert("Failed: " + msg));
+                    }
+                })
+                .catch(err => alert("Error updating price: " + err.message));
+            } else if (newPrice !== null) {
+                alert("Please enter a valid numeric price.");
+            }
         });
     });
 

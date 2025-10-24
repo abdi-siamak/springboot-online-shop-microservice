@@ -5,18 +5,16 @@ import com.siamak.shop.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import com.paypal.api.payments.Links;
 import com.paypal.api.payments.Payment;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/paypal")
+@RequiredArgsConstructor
 public class PayPalPaymentController {
 
-    @Autowired
     private final PaymentService payPalService;
     @Value("${SPRING_BOOT_URL_PATH}")
     private String SPRING_BOOT_URL_PATH;
@@ -36,6 +34,8 @@ public class PayPalPaymentController {
 
             for (Links link : payment.getLinks()) {
                 if (link.getRel().equalsIgnoreCase("approval_url")) {
+                    // TO Do: update the status of the order
+
                     return ResponseEntity.ok(link.getHref()); // Return redirect URL to frontend
                 }
             }

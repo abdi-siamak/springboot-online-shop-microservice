@@ -1,7 +1,6 @@
 package com.siamak.shop.repository;
 
 import com.siamak.shop.model.Order;
-import com.siamak.shop.model.User;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

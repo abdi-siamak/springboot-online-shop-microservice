@@ -1,6 +1,5 @@
 package com.siamak.shop.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data

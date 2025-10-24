@@ -118,6 +118,7 @@
       const approvalUrl = await paymentResponse.text();
       // Redirect user to PayPal approval URL
       window.location.href = approvalUrl;
+
     } catch (error) {
       alert("Error connecting to payment server.");
       console.error(error);

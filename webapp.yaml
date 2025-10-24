@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: springboot-online-shop
+          image: abdisiamak/springboot-online-shop:windows
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_BOOT_URL_PATH
+              value: "/"
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-config
+                  key: postgres-url
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-user
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
+            - name: JAVA_TOOL_OPTIONS
+              value: >
+                -javaagent:/otel/opentelemetry-javaagent.jar
+                -Dotel.traces.exporter=otlp
+                -Dotel.exporter.otlp.endpoint=http://jaeger.monitoring.svc.cluster.local:4317
+                -Dotel.resource.attributes=service.name=springboot-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+spec:
+  selector:
+    app: webapp
+  ports:
+    - port: 8080  # external port
+      targetPort: 8080 # container port
+  type: LoadBalancer

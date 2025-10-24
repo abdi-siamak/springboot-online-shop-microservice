@@ -1,8 +1,8 @@
 package com.siamak.shop.controller;
 
+import com.siamak.shop.client.catalog.CatalogClient;
 import com.siamak.shop.model.CartItem;
 import com.siamak.shop.model.Product;
-import com.siamak.shop.repository.ProductRepository;
 import com.siamak.shop.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +16,11 @@ import java.util.List;
 public class CartController {
 
     private final CartService cartService;
-    private final ProductRepository productRepository;
+    private final CatalogClient catalogClient;
 
     @PostMapping("/add")
     public ResponseEntity<String> addToCart(@RequestParam Long productId, @RequestParam int quantity) {
-        Product product = productRepository.findById(productId).orElse(null);
+        Product product = catalogClient.getProductById(productId);
         if (product == null) {
             return ResponseEntity.badRequest().body("Product not found");
         }

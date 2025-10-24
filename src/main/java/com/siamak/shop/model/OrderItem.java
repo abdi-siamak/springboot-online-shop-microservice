@@ -21,8 +21,7 @@ public class OrderItem {
     @ToString.Exclude
     private Order order;
 
-    @ManyToOne
-    private Product product;
+    private Long productId;
 
     private int quantity;
 

@@ -1,16 +1,15 @@
 package com.siamak.shop.controller;
 
+import com.siamak.shop.client.catalog.CatalogClient;
 import com.siamak.shop.model.CartItem;
 import com.siamak.shop.model.Order;
 import com.siamak.shop.model.User;
 import com.siamak.shop.service.CartService;
 import com.siamak.shop.service.OrderService;
-import com.siamak.shop.service.ProductService;
 import com.siamak.shop.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,16 +25,13 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/")
+@RequiredArgsConstructor
 public class ViewController {
 
-    @Autowired
-    private CartService cartService;
-    @Autowired
-    private ProductService productService;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private OrderService orderService;
+    private final CartService cartService;
+    private final CatalogClient catalogClient;
+    private final UserService userService;
+    private final OrderService orderService;
     @Value("${paypal.client.id}")
     private String paypalClientId;
 
@@ -51,7 +47,7 @@ public class ViewController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin")
     public String admin(Model model, Authentication authentication) {
-        model.addAttribute("productItems", productService.getAllProducts());
+        model.addAttribute("productItems", catalogClient.getAllProducts());
         model.addAttribute("users", userService.findAll());
 
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
@@ -66,7 +62,7 @@ public class ViewController {
     @GetMapping("/products")
     public String products(Model model, Authentication authentication) {
 
-        model.addAttribute("productItems", productService.getAllProducts());
+        model.addAttribute("productItems", catalogClient.getAllProducts());
 
         if (authentication != null) {
             Object principal = authentication.getPrincipal();

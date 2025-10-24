@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <title>Your Orders</title>
     <style>
         body {
@@ -65,12 +67,10 @@
         .order-container {
             position: relative;
         }
-        .delete-form {
+        .delete-order-btn {
             position: absolute;
             top: 10px;
             right: 10px;
-        }
-        .delete-form button {
             background-color: #dc3545;
             color: white;
             border: none;
@@ -80,7 +80,7 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        .delete-form button:hover {
+        .delete-order-btn:hover {
             background-color: #c82333;
         }
     </style>
@@ -94,12 +94,7 @@
 </div>
 
 <div th:each="order : ${userOrders}" class="order-container">
-    <form th:action="@{/api/order/delete}" method="post" class="delete-form">
-        <input type="hidden" name="order_id" th:value="${order.id}" />
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-        <button type="submit">✕</button>
-
-    </form>
+    <button type="button" class="delete-order-btn" th:data-order-id = "${order.id}" >✕</button>
     <div class="order-header">
         Order #<span th:text="${order.id}"></span> -
         <span th:text="${#temporals.format(order.orderDate, 'dd MMM yyyy HH:mm')}"></span> -
@@ -143,9 +138,39 @@
 </div><br><br>
 
 <script>
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
     document.getElementById('productsBtn').addEventListener('click', function () {
         window.location.href = "/products";
     });
+
+    document.body.addEventListener('click', function (event) {
+        const deleteButton = event.target.closest('.delete-order-btn');
+        if (deleteButton) {
+            const orderId = deleteButton.dataset.orderId;
+            console.log(orderId);
+            fetch('/api/order/delete?order_id='+orderId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                credentials: 'include'
+            })
+                .then(response => {
+                    if(response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to delete order.');
+                    }
+                })
+                .catch(error => {
+                    alert('Failed to delete order: ' + error);
+                })
+        }
+    });
+
 </script>
 </body>
 </html>
