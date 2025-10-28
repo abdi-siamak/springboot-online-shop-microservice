@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import com.siamak.shop.security.JwtUtils;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
@@ -130,5 +131,18 @@ public class UserController {
 
          */
         return !token.isEmpty();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> updatePassword (
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+
+        String newPassword = body.get("password");
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        User user = userClient.findById(id).get();
+        userClient.updatePassword(user, encodedPassword);
+        return ResponseEntity.ok().build();
     }
 }
