@@ -1,9 +1,12 @@
 package com.siamak.shop.security;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -19,88 +22,73 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
     private final CustomUserDetailsService userDetailsService;
 
-
-    /*
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain chain) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String username;
+        try {
+            String jwt = null;
+            String username = null;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        jwt = authHeader.substring(7);
-        username = jwtUtils.extractUsername(jwt);
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtUtils.validateToken(jwt)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            // 1️. Try header first
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                jwt = authHeader.substring(7);
             }
-        }
 
-        filterChain.doFilter(request, response);
-    }
-     */
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            // 2️. If no token in header, check cookies
+            if (jwt == null) {
+                jwt = getJwtFromCookies(request.getCookies());
+            }
 
-        String jwt = null;
-        String username = null;
+            // 3️. Validate and authenticate
+            if (jwt != null && jwtUtils.validateToken(jwt)
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-        // First, check the Authorization header for Bearer token
-        final String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwt = authHeader.substring(7);
-            username = jwtUtils.extractUsername(jwt);
-        }
-
-        // If no token in header, check cookies
-        if (jwt == null) {
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                jwt = getJwtFromCookies(cookies);
-                if (jwt != null) {
-                    username = jwtUtils.extractUsername(jwt);
+                username = jwtUtils.extractUsername(jwt);
+                if (username != null && !username.isBlank()) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
+        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
+            // user deleted or not found
+            SecurityContextHolder.clearContext();
+            clearJwtCookie(response);
+        } catch (RuntimeException ex) {
+            // expired or malformed JWT
+            SecurityContextHolder.clearContext();
+            clearJwtCookie(response);
+        } finally {
+            chain.doFilter(request, response);
         }
-
-        // If there is a valid JWT token, authenticate the user
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtUtils.validateToken(jwt)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
-        }
-
-        filterChain.doFilter(request, response);
     }
 
+    // Extracts JWT from cookies
     private String getJwtFromCookies(Cookie[] cookies) {
+        if (cookies == null) return null;
         for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("jwt")) {
+            if ("jwt".equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }
         return null;
+    }
+
+    // Clears invalid JWT cookie
+    private void clearJwtCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("jwt", "");
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // delete immediately
+        // Optional hardening:
+        // cookie.setSecure(true);             // enable under HTTPS
+        // cookie.setAttribute("SameSite","Lax");
+        response.addCookie(cookie);
     }
 }

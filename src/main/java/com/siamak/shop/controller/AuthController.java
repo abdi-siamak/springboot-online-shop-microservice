@@ -1,5 +1,6 @@
 package com.siamak.shop.controller;
 
+import com.siamak.shop.client.user.UserClient;
 import com.siamak.shop.dto.LoginRequest;
 import com.siamak.shop.dto.ResetPasswordRequest;
 import com.siamak.shop.security.JwtUtils;
@@ -14,6 +15,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +33,9 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final AuthService authService;
-
-
+    private final UserClient userClient;
+    private final PasswordEncoder passwordEncoder;
+    private final UserDetailsService userDetailsService;
     /*
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
@@ -61,12 +65,18 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
         }
 
-        // Authenticate the user
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        boolean credentialsValid = userClient.validateCredentials(request.getUsername(), request.getPassword());
+        if (!credentialsValid) {
+            responseBody.put("message", "Invalid username or password!");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+        }
 
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null, // No need for credentials (password) after successful login
+                userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication); // storing authentication info in the session or a cookie/token.
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
         // Generate the JWT token
         String token = jwtUtils.generateToken(userDetails.getUsername());

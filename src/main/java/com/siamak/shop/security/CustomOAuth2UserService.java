@@ -1,8 +1,8 @@
 package com.siamak.shop.security;
 
+import com.siamak.shop.client.user.UserClient;
 import com.siamak.shop.model.Role;
 import com.siamak.shop.model.User;
-import com.siamak.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -17,7 +17,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserService userService;
+    private final UserClient userClient;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
@@ -28,14 +28,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email = oAuth2User.getAttribute("email");
 
         // Check if user exists
-        User user = userService.findByEmail(email).orElseGet(() -> {
+        User user = userClient.findByEmail(email).orElseGet(() -> {
             // Register new user
             User newUser = new User();
             newUser.setName(name);
             newUser.setEmail(email);
             newUser.setPassword("");
             newUser.setRole(Role.USER);
-            return userService.registerUser(newUser);
+            return userClient.registerUser(newUser);
         });
 
         return new DefaultOAuth2User(
