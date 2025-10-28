@@ -30,7 +30,7 @@ public class UserService {
         );
 
         outbox.add(
-                "catalog.product",
+                "Users.user",
                 String.valueOf(p.getId()),
                 evt.eventType(),
                 evt
