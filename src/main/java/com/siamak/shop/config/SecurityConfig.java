@@ -1,6 +1,7 @@
 package com.siamak.shop.config;
 
 import com.siamak.shop.filter.CsrfTokenResponseHeaderBindingFilter;
+import com.siamak.shop.security.CustomOAuth2UserService;
 import com.siamak.shop.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -27,6 +28,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
     //private final CustomUserDetailsService userDetailsService;
 
     /*
@@ -61,9 +63,11 @@ public class SecurityConfig {
                         // Default: block anything not explicitly mentioned
                         .anyRequest().authenticated()
                 )
-                .with(new OAuth2LoginConfigurer<HttpSecurity>(), oauth2 ->
-                        oauth2
-                                .defaultSuccessUrl("/products", true)
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .defaultSuccessUrl("/products", true)
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
