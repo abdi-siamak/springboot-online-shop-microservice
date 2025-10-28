@@ -1,10 +1,10 @@
 package com.siamak.shop.controller;
 
+import com.siamak.shop.client.user.UserClient;
 import com.siamak.shop.dto.ShippingDataRequest;
 import com.siamak.shop.model.*;
 import com.siamak.shop.service.CartService;
 import com.siamak.shop.service.OrderService;
-import com.siamak.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,13 +25,13 @@ public class OrderController {
 
     private final OrderService orderService;
     private final CartService cartService;
-    private final UserService userService;
+    private final UserClient userClient;
 
     @PostMapping("/save")
     @ResponseBody
     public ResponseEntity<Void> save(@RequestBody ShippingDataRequest request, Authentication authentication) {
         String email = authentication.getName(); // or username
-        Optional<User> optionalUser = userService.findByEmail(email);
+        Optional<User> optionalUser = userClient.findByEmail(email);
 
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -42,7 +42,7 @@ public class OrderController {
         Order newOrder = new Order();
         newOrder.setOrderDate(LocalDateTime.now());
         newOrder.setStatus("PENDING");
-        newOrder.setUser(currentUser);///****
+        newOrder.setUserId(currentUser.getId());///****
         newOrder.setShippingData(new ShippingData(
                 request.getFullName(),
                 request.getPhone(),

@@ -1,14 +1,13 @@
 package com.siamak.shop.controller;
 
 import com.siamak.shop.client.catalog.CatalogClient;
+import com.siamak.shop.client.user.UserClient;
 import com.siamak.shop.model.CartItem;
 import com.siamak.shop.model.Order;
 import com.siamak.shop.model.User;
 import com.siamak.shop.service.CartService;
 import com.siamak.shop.service.OrderService;
-import com.siamak.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -30,7 +29,7 @@ public class ViewController {
 
     private final CartService cartService;
     private final CatalogClient catalogClient;
-    private final UserService userService;
+    private final UserClient userClient;
     private final OrderService orderService;
     @Value("${paypal.client.id}")
     private String paypalClientId;
@@ -48,10 +47,10 @@ public class ViewController {
     @GetMapping("/admin")
     public String admin(Model model, Authentication authentication) {
         model.addAttribute("productItems", catalogClient.getAllProducts());
-        model.addAttribute("users", userService.findAll());
+        model.addAttribute("users", userClient.getAllUsers());
 
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
-            Optional<User> currentUser = userService.findByEmail(userDetails.getUsername());
+            Optional<User> currentUser = userClient.findByEmail(userDetails.getUsername());
             currentUser.ifPresent(user -> { model.addAttribute("loggedInUserId", user.getId());
             });
         }
@@ -61,12 +60,15 @@ public class ViewController {
 
     @GetMapping("/products")
     public String products(Model model, Authentication authentication) {
-
-        model.addAttribute("productItems", catalogClient.getAllProducts());
-
+        try {
+            model.addAttribute("productItems", catalogClient.getAllProducts());
+        } catch (Exception ex) {
+            model.addAttribute("productItems", List.of());
+            model.addAttribute("loadError", ex.getMessage());
+            // log ex
+        }
         if (authentication != null) {
-            Object principal = authentication.getPrincipal();
-            model.addAttribute("authenticatedUser", principal);
+            model.addAttribute("authenticatedUser", authentication.getPrincipal());
         }
             /*
             if (principal instanceof UserDetails userDetails) {
@@ -94,7 +96,7 @@ public class ViewController {
         if (principal != null) {
             userEmail = principal.getName();
             cartItems = cartService.getItems();
-            Optional<User> user = userService.findByEmail(userEmail);
+            Optional<User> user = userClient.findByEmail(userEmail);
             User cartUser = user.orElseThrow(() -> new RuntimeException("User not found"));
             model.addAttribute("authenticatedUser", principal);
             model.addAttribute("userRole", cartUser.getRole());
@@ -126,7 +128,7 @@ public class ViewController {
     @GetMapping("/orders")
     public String orders(Model model, Authentication authentication) {
         String email = authentication.getName();
-        Optional<User> userOpt = userService.findByEmail(email);
+        Optional<User> userOpt = userClient.findByEmail(email);
 
         if (userOpt.isEmpty()) {
             return "redirect:/error";

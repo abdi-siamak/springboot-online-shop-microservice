@@ -1,9 +1,9 @@
 package com.siamak.shop.service;
 
+import com.siamak.shop.client.user.UserClient;
 import com.siamak.shop.model.PasswordResetToken;
 import com.siamak.shop.model.User;
 import com.siamak.shop.repository.PasswordResetTokenRepository;
-import com.siamak.shop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,26 +19,26 @@ public class AuthService {
 
     @Value("${SPRING_BOOT_URL_PATH}")
     private String SPRING_BOOT_URL_PATH;
-    private final UserRepository userRepository;
+    private final UserClient userClient;
     private final PasswordResetTokenRepository tokenRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
     public void initiatePasswordReset(String email) {
-        if(userRepository.findByEmail(email).isEmpty()){
+        if(userClient.findByEmail(email).isEmpty()){
             return;
         }
 
-        User user = userRepository.findByEmail(email).get();
+        User user = userClient.findByEmail(email).get();
 
         // Check if a token already exists for the user
-        Optional<PasswordResetToken> existingTokenOpt = tokenRepository.findByUser(user);
+        Optional<PasswordResetToken> existingTokenOpt = tokenRepository.findByUserId(user.getId());
         existingTokenOpt.ifPresent(tokenRepository::delete);
         String token = UUID.randomUUID().toString();
 
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .token(token)
-                .user(user)
+                .userId(user.getId())
                 .expiryDate(LocalDateTime.now().plusHours(1))
                 .build();
 
@@ -52,9 +52,10 @@ public class AuthService {
         PasswordResetToken resetToken = tokenRepository.findByToken(token);
         if (resetToken == null || resetToken.getExpiryDate().isBefore(LocalDateTime.now())) return false;
 
-        User user = resetToken.getUser();
+        Long userId = resetToken.getUserId();
+        User user = userClient.findById(userId).get();
         user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
+        //userRepository.save(user); TO DO: use kafka to update password
         tokenRepository.delete(resetToken);
         return true;
     }

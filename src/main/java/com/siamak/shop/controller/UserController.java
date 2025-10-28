@@ -1,8 +1,8 @@
 package com.siamak.shop.controller;
 
+import com.siamak.shop.client.user.UserClient;
 import com.siamak.shop.dto.RegisterRequest;
 import com.siamak.shop.model.User;
-import com.siamak.shop.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.siamak.shop.security.JwtUtils;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,26 +31,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+    private final UserClient userClient;
     private final JwtUtils jwtUtils;
+    private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
-
-    /*
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
-        try {
-            System.out.println(userService.existsByUsername(user.getUsername()));
-            if (userService.existsByUsername(user.getUsername())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User has already registered!");
-            } else {
-                userService.registerUser(user);
-                return ResponseEntity.ok("User registered successfully.");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed: " + e.getMessage());
-        }
-    }
-    */
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest registerRequest,
@@ -57,24 +42,24 @@ public class UserController {
                                                         HttpServletResponse response) {
         Map<String, String> responseBody = new HashMap<>();
         User user = registerRequest.getUser();
-
+        String rawPassword = user.getPassword();
         // Check if request is from admin page
         String refererHeader = request.getHeader("Referer");
         boolean isFromAdminReferer = refererHeader != null && refererHeader.contains("/admin");
 
         if (!isFromAdminReferer && !verifyCaptcha(registerRequest.getRecaptchaToken())) {
-
             responseBody.put("message", "Captcha verification failed");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
         }
 
         try {
-            if (userService.existsByEmail(user.getEmail())) {
+            if (userClient.findByEmail(user.getEmail()).isPresent()) {
                 responseBody.put("message", "User has already registered!");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
             }
-
-            userService.registerUser(user);
+            String encodedPassword = passwordEncoder.encode(rawPassword);
+            user.setPassword(encodedPassword);
+            userClient.registerUser(user);
 
             if (isFromAdminReferer) {
                 responseBody.put("message", "User registered successfully.");
@@ -109,18 +94,18 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id, Principal principal) {
-        Optional<User> currentUser = userService.findByEmail(principal.getName());
+        Optional<User> currentUser = userClient.findByEmail(principal.getName());
 
         if (currentUser.isPresent() && currentUser.get().getId().equals(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You cannot delete yourself.");
         }
 
-        Optional<User> user = userService.findById(id);
+        Optional<User> user = userClient.findById(id);
 
         if (user.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
         }
-        userService.deleteUser(user.get());
+        userClient.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -146,7 +131,4 @@ public class UserController {
          */
         return !token.isEmpty();
     }
-
-
-
 }

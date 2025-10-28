@@ -22,9 +22,8 @@ public class PasswordResetToken {
 
     private String token;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false, name = "user_id")
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     private LocalDateTime expiryDate;
 }
