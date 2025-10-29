@@ -16,7 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +33,6 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final AuthService authService;
     private final UserClient userClient;
-    private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
     /*
     @PostMapping("/login")

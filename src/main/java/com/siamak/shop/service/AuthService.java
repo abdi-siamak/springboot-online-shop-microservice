@@ -25,37 +25,37 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public void initiatePasswordReset(String email) {
-        if(userClient.findByEmail(email).isEmpty()){
+        // Generate a dummy userId for token
+        Optional<User> user = userClient.findByEmail(email);
+        if (user.isEmpty()) {
             return;
         }
+        // Delete existing token if any
+        tokenRepository.findByUserId(user.get().getId()).ifPresent(tokenRepository::delete);
 
-        User user = userClient.findByEmail(email).get();
-
-        // Check if a token already exists for the user
-        Optional<PasswordResetToken> existingTokenOpt = tokenRepository.findByUserId(user.getId());
-        existingTokenOpt.ifPresent(tokenRepository::delete);
         String token = UUID.randomUUID().toString();
-
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .token(token)
-                .userId(user.getId())
+                .userId(user.get().getId())
                 .expiryDate(LocalDateTime.now().plusHours(1))
                 .build();
 
         tokenRepository.save(resetToken);
-        String resetLink = SPRING_BOOT_URL_PATH +"/reset/reset-password?token=" + token;
 
-        emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
+        String resetLink = SPRING_BOOT_URL_PATH + "/reset/reset-password?token=" + token;
+        emailService.sendResetPasswordEmail(email, resetLink);
     }
 
     public boolean resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = tokenRepository.findByToken(token);
         if (resetToken == null || resetToken.getExpiryDate().isBefore(LocalDateTime.now())) return false;
-
         Long userId = resetToken.getUserId();
-        User user = userClient.findById(userId).get();
-        user.setPassword(passwordEncoder.encode(newPassword));
-        //userRepository.save(user); TO DO: use kafka to update password
+
+        Optional<User> userOpt = userClient.findById(userId);
+        if (userOpt.isEmpty()) return false;
+
+        User user = userOpt.get();
+        userClient.updatePassword(user, passwordEncoder.encode(newPassword));
         tokenRepository.delete(resetToken);
         return true;
     }

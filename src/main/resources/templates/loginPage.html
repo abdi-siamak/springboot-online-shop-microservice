@@ -194,12 +194,10 @@
 
     document.getElementById('sendResetLinkBtn').addEventListener('click', function () {
         const email = document.getElementById('forgotEmail').value;
-
         if (!email) {
             alert("Please enter your email");
             return;
         }
-
         fetch('/api/auth/forgot-password', {
             method: 'POST',
             headers: {
